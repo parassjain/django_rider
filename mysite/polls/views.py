@@ -5,7 +5,6 @@ from django.views import generic
 from django.utils import timezone
 from django.views.decorators.csrf import csrf_exempt
 from .models import Requester, Riders,Category
-from .serializers import RequesterSerializer
 from rest_framework.response import Response
 from rest_framework import mixins, status
 from rest_framework import permissions, viewsets
@@ -63,7 +62,16 @@ class RequesterView(viewsets.GenericViewSet):
 
         matched_req = [x.seralise() for x in my_requests]
         return Response({"matched_req": matched_req},status=status.HTTP_200_OK)
-            
+    
+    def assign_rider(self, request, *args, **kwargs):
+        data = request.data.copy()
+        requester=Requester.objects.get(id=data["requester_request_id"])
+        assinged_rider=Riders.objects.get(id=data["rider_id"])
+        requester.assigned_rider=assinged_rider
+        requester.save()
+    
+        return Response({"message": "success", },status=status.HTTP_202_ACCEPTED)
+
     
 
 class RiderView(viewsets.GenericViewSet):

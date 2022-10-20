@@ -17,6 +17,7 @@ class Riders(models.Model):
 
     def seralise(self):
         seralised_data = {
+            "id": self.id,
             "rider_name": self.rider_name,
             "rider_phone": self.rider_phone,
             "from_location": self.from_location,
@@ -41,10 +42,12 @@ class Requester(models.Model):
     asset_sentivity = models.IntegerField(default=0)
     status = models.IntegerField(default=0)
     delivery_info = models.CharField(max_length=200)
+    assigned_rider= models.ForeignKey(Riders, on_delete=models.CASCADE, related_name="riders", null=True)
     created_at = models.DateTimeField(auto_now_add=True, db_index=True)
 
     def seralise(self):
         seralised_data = {
+            "id": self.id,  # type: ignore
             "requester_name": self.requester_name,
             "from_location": self.from_location,
             "to_location": self.to_location,
@@ -55,6 +58,8 @@ class Requester(models.Model):
             "asset_sentivity": Category.ASSET_SENSTIVITY[self.asset_sentivity],
             "delivery_info": self.delivery_info,
             "status": Category.STATUS[self.status],
+            "assigned_rider": self.assigned_rider,
+            "created_at": self.created_at,
             
         }
         return seralised_data
