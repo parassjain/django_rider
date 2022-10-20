@@ -1,56 +1,97 @@
 from django.shortcuts import get_object_or_404, render
-from django.http import HttpResponseRedirect
+from django.http import HttpResponse
 from django.urls import reverse
 from django.views import generic
 from django.utils import timezone
+from django.views.decorators.csrf import csrf_exempt
+from .models import Requester, Riders,Category
+from .serializers import RequesterSerializer
+from rest_framework.response import Response
+from rest_framework import mixins, status
+from rest_framework import permissions, viewsets
+import json
+from django.http import JsonResponse
+from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger, InvalidPage
 
-from .models import Choice, Question
+class RequesterView(viewsets.GenericViewSet):
 
-
-class IndexView(generic.ListView):
-    template_name = 'polls/index.html'
-    context_object_name = 'latest_question_list'
-
-    def get_queryset(self):
-        """
-        Return the last five published questions (not including those set to be
-        published in the future).
-        """
-        return Question.objects.filter(
-            pub_date__lte=timezone.now()
-        ).order_by('-pub_date')[:5]
-
-
-class DetailView(generic.DetailView):
-    model = Question
-    template_name = 'polls/detail.html'
-
-    def get_queryset(self):
-        """
-        Excludes any questions that aren't published yet.
-        """
-        return Question.objects.filter(pub_date__lte=timezone.now())
+    def retrieve(self, request, *args, **kwargs):
+        print(request.method)
+        all_req = [x.seralise() for x in Requester.objects.all()]
+        queryset=Requester.objects.all()
+        try:
+            paginator = Paginator(queryset, 20)
+            images = paginator.page(1)
+            print("123")
+        except InvalidPage:
+            print("sdf")
+            paginator = Paginator(queryset, max(2, queryset.count()))
+            images = paginator.page(1)
 
 
-class ResultsView(generic.DetailView):
-    model = Question
-    template_name = 'polls/results.html'
+        res = dict()
+        res["data"] = [x.seralise() for x in images]
+        res["count"] = paginator.count
+        res["num_pages"] = paginator.num_pages
+        res["current_page_number"] = images.number
+        return Response(res,status=status.HTTP_200_OK)
+        return Response({"all_requests": all_req},status=status.HTTP_200_OK)
+        
+    
+    def create(self, request, *args, **kwargs):
+        data = request.data.copy()
+        new_request = Requester()
+        try:
+            new_request.from_location = data["from_location"]
+            new_request.to_location = data["to_location"]
+            new_request.flexible_timing = data["flexible_timing"]
+            new_request.travel_datetime = data["travel_datetime"]
+            new_request.asset_type = data["asset_type"]
+            new_request.asset_sentivity = data["asset_sentivity"]
+            new_request.delivery_info = data["delivery_info"]
+            new_request.asset_sentivity = data["asset_sentivity"]
+            new_request.save()
+            
+            return Response({"message": "success", },status=status.HTTP_201_CREATED)
+        except Exception as e:
+            return Response({"message": str(e)},status=status.HTTP_400_BAD_REQUEST)
+    
+    def matching_riders(self, request, *args, **kwargs):
+        my_requests = Requester.objects.filter(from_location__in=Riders.objects.all().values('from_location'))
+        # all_riders = Riders.objects.all()
+        # matched_req = []
 
+        matched_req = [x.seralise() for x in my_requests]
+        return Response({"matched_req": matched_req},status=status.HTTP_200_OK)
+            
+    
 
-def vote(request, question_id):
-    question = get_object_or_404(Question, pk=question_id)
-    try:
-        selected_choice = question.choice_set.get(pk=request.POST['choice'])
-    except (KeyError, Choice.DoesNotExist):
-        # Redisplay the question voting form.
-        return render(request, 'polls/detail.html', {
-            'question': question,
-            'error_message': "You didn't select a choice.",
-        })
-    else:
-        selected_choice.votes += 1
-        selected_choice.save()
-        # Always return an HttpResponseRedirect after successfully dealing
-        # with POST data. This prevents data from being posted twice if a
-        # user hits the Back button.
-        return HttpResponseRedirect(reverse('polls:results', args=(question.id,)))
+class RiderView(viewsets.GenericViewSet):
+    # serializer_class = RequesterSerializer
+
+    def retrieve(self, request, *args, **kwargs):
+        print(request.method)
+        all_riders = [x.seralise() for x in Riders.objects.all()]
+        return Response({"all_riders": all_riders},status=status.HTTP_200_OK)
+        
+    
+    def create(self, request, *args, **kwargs):
+        print(request.method)
+        data = request.data.copy()
+        new_request = Riders()
+        try:
+            new_request.rider_name = data.get("rider_name",None)
+            new_request.rider_phone = data.get("rider_phone",None)
+            new_request.from_location = data["from_location"]
+            new_request.to_location = data["to_location"]
+            new_request.travel_medium = data["travel_medium"]
+            new_request.travel_datetime = data["travel_datetime"]
+            new_request.flexible_timing = data["flexible_timing"]
+            new_request.no_of_assets = data["no_of_assets"]
+            new_request.save()
+            
+            return Response({"message": "success", },status=status.HTTP_201_CREATED,)
+        except Exception as e:
+            return Response({"message": str(e)},status=status.HTTP_400_BAD_REQUEST,)
+   
+
