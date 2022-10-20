@@ -16,6 +16,9 @@ urlpatterns = [
     url(r"^requester/match",RequesterView.as_view({
         'get': 'matching_riders',
         }),name="matching_riders"),
+    url(r"^requester/assign_rider",RequesterView.as_view({
+        'post': 'assign_rider',
+        }),name="assign_rider"),
     url(r"^rider",RiderView.as_view({
         'get': 'retrieve',
         'post': 'create',

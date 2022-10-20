@@ -46,6 +46,11 @@ class Requester(models.Model):
     created_at = models.DateTimeField(auto_now_add=True, db_index=True)
 
     def seralise(self):
+        try:
+            rider=self.assigned_rider.id # type: ignore
+        except:
+            rider=None
+           
         seralised_data = {
             "id": self.id,  # type: ignore
             "requester_name": self.requester_name,
@@ -58,10 +63,11 @@ class Requester(models.Model):
             "asset_sentivity": Category.ASSET_SENSTIVITY[self.asset_sentivity],
             "delivery_info": self.delivery_info,
             "status": Category.STATUS[self.status],
-            "assigned_rider": self.assigned_rider,
+            "assigned_rider":rider,
             "created_at": self.created_at,
             
         }
+         
         return seralised_data
 
 class Category:

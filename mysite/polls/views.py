@@ -19,11 +19,9 @@ class RequesterView(viewsets.GenericViewSet):
         all_req = [x.seralise() for x in Requester.objects.all()]
         queryset=Requester.objects.all()
         try:
-            paginator = Paginator(queryset, 20)
+            paginator = Paginator(queryset, 2)
             images = paginator.page(1)
-            print("123")
         except InvalidPage:
-            print("sdf")
             paginator = Paginator(queryset, max(2, queryset.count()))
             images = paginator.page(1)
 
