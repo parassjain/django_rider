@@ -12,7 +12,7 @@ import json
 from django.http import JsonResponse
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger, InvalidPage
 
-class RequesterView(viewsets.GenericViewSet):
+class RequesterView(viewsets.ViewSet):
 
     def retrieve(self, request, *args, **kwargs):
         print(request.method)
