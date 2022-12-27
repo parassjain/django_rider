@@ -72,7 +72,7 @@ class RequesterView(viewsets.ViewSet):
 
     
 
-class RiderView(viewsets.GenericViewSet):
+class RiderView(viewsets.ViewSet):
     # serializer_class = RequesterSerializer
 
     def retrieve(self, request, *args, **kwargs):
